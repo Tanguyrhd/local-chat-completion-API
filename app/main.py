@@ -30,8 +30,7 @@ class ChatResponse(BaseModel):
 async def root():
     return {
         "message": "Local Chat Completion API",
-        "status": "running",
-        "available_models": ["llama3.2:3b", "qwen2.5:7b"]
+        "status": "running"
     }
 
 @app.get("/v1/models")
@@ -84,7 +83,7 @@ async def chat_completion(request: ChatRequest):
                 "finish_reason": "stop"
             }],
             "usage": {
-                "prompt_tokens": 0,  # Ollama ne retourne pas ces infos
+                "prompt_tokens": 0,
                 "completion_tokens": 0,
                 "total_tokens": 0
             }
