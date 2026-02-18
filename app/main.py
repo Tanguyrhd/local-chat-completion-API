@@ -8,6 +8,7 @@ app = FastAPI(
     description="API locale compatible OpenAI utilisant Ollama",
     version="1.0.0"
 )
+
 ## separer pour etre juste faire un truc
 
 class Message(BaseModel):
