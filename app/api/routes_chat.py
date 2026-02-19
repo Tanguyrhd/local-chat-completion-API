@@ -34,6 +34,7 @@ def create_chat_completion(request: ChatCompletionRequest, _=Depends(verify_api_
     responses = [
         LLMEngine.generate_response(
             model=request.model,
+            instructions=None,
             input_text=prompt,
             temperature=request.temperature
         )
