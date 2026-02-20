@@ -24,5 +24,5 @@ app = FastAPI(
 
 # Register routers
 # Each router groups the routes of a functional domain
-app.include_router(routes_chat.router)      # /v1/chat/completions
+app.include_router(routes_chat.router)  # /v1/chat/completions
 app.include_router(routes_responses.router)  # /v1/responses

@@ -8,6 +8,7 @@ All other modules go through this function to generate text.
 import requests
 from core.config.settings import settings
 
+
 def generate_with_ollama(model: str, messages: list[dict], temperature: float):
     """
     Send a list of messages to the Ollama /api/chat endpoint and return the reply.
@@ -33,8 +34,8 @@ def generate_with_ollama(model: str, messages: list[dict], temperature: float):
             "model": model,
             "messages": messages,
             "options": {"temperature": temperature},
-            "stream": False
-        }
+            "stream": False,
+        },
     )
 
     response.raise_for_status()

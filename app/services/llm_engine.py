@@ -10,6 +10,7 @@ from core.config.settings import settings
 from services.ollama_client import generate_with_ollama
 from models.response import Response, ResponseOutput
 
+
 class LLMEngine:
     """
     Central orchestrator for LLM interactions.
@@ -41,12 +42,7 @@ class LLMEngine:
         model = model or settings.DEFAULT_MODEL
 
         output_text = generate_with_ollama(
-            model=model,
-            messages=messages,
-            temperature=temperature
+            model=model, messages=messages, temperature=temperature
         )
 
-        return Response(
-            model=model,
-            output=ResponseOutput(content=output_text)
-        )
+        return Response(model=model, output=ResponseOutput(content=output_text))

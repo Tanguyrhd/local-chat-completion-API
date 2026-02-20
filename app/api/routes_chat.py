@@ -13,6 +13,7 @@ from core.security import verify_api_key
 
 router = APIRouter()
 
+
 @router.post("/v1/chat/completions")
 def create_chat_completion(request: ChatCompletionRequest, _=Depends(verify_api_key)):
     """
@@ -33,9 +34,7 @@ def create_chat_completion(request: ChatCompletionRequest, _=Depends(verify_api_
     # Call the engine n times to generate multiple independent completions
     responses = [
         LLMEngine.generate_response(
-            model=request.model,
-            messages=messages,
-            temperature=request.temperature
+            model=request.model, messages=messages, temperature=request.temperature
         )
         for _ in range(request.n)
     ]
@@ -43,12 +42,7 @@ def create_chat_completion(request: ChatCompletionRequest, _=Depends(verify_api_
     return {
         "model": responses[0].model,
         "choices": [
-            {
-                "message": {
-                    "role": "assistant",
-                    "content": r.output.content
-                }
-            }
+            {"message": {"role": "assistant", "content": r.output.content}}
             for r in responses
-        ]
+        ],
     }
