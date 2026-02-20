@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     OLLAMA_URL: str = Field(
-        default="http://localhost:11434/api/generate"
+        default="http://localhost:11434/api/chat"
     )
 
     DEFAULT_MODEL: str = "llama3"
