@@ -9,6 +9,8 @@ so that routes stay thin and the Ollama client stays focused on HTTP.
 from core.config.settings import settings
 from services.ollama_client import generate_with_ollama
 from models.response import Response, ResponseOutput
+from models.chat import Message
+from utils.prompt_builder import build_prompt_from_messages
 
 class LLMEngine:
     """
@@ -46,7 +48,11 @@ class LLMEngine:
 
         # If a system instruction is provided, prepend it to the prompt
         if instructions:
-            input_text = f"[SYSTEM]: {instructions}\n[USER]: {input_text}"
+            messages = [
+                Message(role="system", content=instructions),
+                Message(role="user", content=input_text),
+            ]
+            input_text = build_prompt_from_messages(messages)
 
         output_text = generate_with_ollama(
             model=model,
