@@ -16,5 +16,6 @@ requests>=2.31,<3
 # Dev (optionnel)
 pytest==7.4.3
 pytest-asyncio==0.23.3
+httpx>=0.25,<1
 black==24.1.1
 ruff==0.1.14

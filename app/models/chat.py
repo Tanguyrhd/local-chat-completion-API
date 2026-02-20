@@ -8,6 +8,7 @@ following the OpenAI Chat Completion API format.
 from pydantic import BaseModel
 from typing import List, Optional
 
+
 class Message(BaseModel):
     """
     A single message in a conversation.
@@ -16,8 +17,10 @@ class Message(BaseModel):
         role: The author of the message. One of "system", "user", or "assistant".
         content: The text content of the message.
     """
+
     role: str
     content: str
+
 
 class ChatCompletionRequest(BaseModel):
     """
@@ -31,6 +34,7 @@ class ChatCompletionRequest(BaseModel):
         temperature: Sampling temperature between 0.0 and 1.0.
                      Lower = more focused/deterministic, higher = more creative/random.
     """
+
     model: Optional[str] = None
     messages: List[Message]
     n: int = 1

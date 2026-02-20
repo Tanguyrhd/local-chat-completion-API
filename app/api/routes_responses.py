@@ -13,6 +13,7 @@ from utils.prompt_builder import build_messages_from_response
 
 router = APIRouter()
 
+
 @router.post("/v1/responses")
 def create_response(request: ResponseRequest, _=Depends(verify_api_key)):
     """
@@ -31,7 +32,5 @@ def create_response(request: ResponseRequest, _=Depends(verify_api_key)):
     messages = build_messages_from_response(request.instructions, request.input)
 
     return LLMEngine.generate_response(
-        model=request.model,
-        messages=messages,
-        temperature=request.temperature
-        )
+        model=request.model, messages=messages, temperature=request.temperature
+    )

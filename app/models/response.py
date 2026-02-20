@@ -10,6 +10,7 @@ Three models work together to represent the full request/response cycle:
 from pydantic import BaseModel
 from typing import Optional
 
+
 class ResponseRequest(BaseModel):
     """
     Request body for POST /v1/responses.
@@ -20,6 +21,7 @@ class ResponseRequest(BaseModel):
         input: The prompt to send to the model.
         temperature: Sampling temperature between 0.0 and 1.0.
     """
+
     model: Optional[str] = None
     instructions: Optional[str] = None
     input: str
@@ -34,6 +36,7 @@ class ResponseOutput(BaseModel):
         role: Always "assistant" — identifies who produced this output.
         content: The generated text from the model.
     """
+
     role: str = "assistant"
     content: str
 
@@ -48,5 +51,6 @@ class Response(BaseModel):
         model: Name of the model that generated the response.
         output: The assistant's reply wrapped in a ResponseOutput.
     """
+
     model: str
     output: ResponseOutput
