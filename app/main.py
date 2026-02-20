@@ -9,7 +9,7 @@ Run with:
 """
 
 from fastapi import FastAPI
-from api import routes_chat, routes_responses
+from api import routes_chat, routes_responses, routes_models
 from core.config.logging_config import setup_logging
 
 # Initialize the logging system before anything else (format, level, etc.)
@@ -24,5 +24,19 @@ app = FastAPI(
 
 # Register routers
 # Each router groups the routes of a functional domain
-app.include_router(routes_chat.router)  # /v1/chat/completions
-app.include_router(routes_responses.router)  # /v1/responses
+app.include_router(routes_chat.router)      # /v1/chat/completions
+app.include_router(routes_responses.router) # /v1/responses
+app.include_router(routes_models.router)    # /v1/models
+
+
+@app.get("/")
+def root():
+    """Health check and API info."""
+    return {
+        "name": app.title,
+        "descritpion": app.description,
+        "version": app.version,
+        "status": "running",
+        "docs": "/docs",
+        "endpoints": ["/v1/chat/completions", "/v1/responses", "/v1/models"],
+    }
