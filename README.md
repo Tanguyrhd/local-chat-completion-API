@@ -6,6 +6,8 @@ An OpenAI-compatible REST API that runs locally using [Ollama](https://ollama.co
 
 - **OpenAI-compatible** — `POST /v1/chat/completions` with full message history support
 - **Simple responses** — `POST /v1/responses` with optional system instructions
+- **Streaming** — token-by-token responses via Server-Sent Events (`"stream": true`)
+- **Model listing** — `GET /v1/models` lists all locally available Ollama models
 - **Multiple completions** — generate `n` independent responses in one request
 - **Temperature control** — tune creativity vs determinism
 - **Optional API key auth** — secure with `x-api-key` header
@@ -50,8 +52,20 @@ Authentication is disabled when `API_KEY` is not set.
 
 ## Running
 
+**Locally:**
 ```bash
 make run
+```
+
+**With Docker (API + Ollama):**
+```bash
+make docker-build
+make docker-up
+
+# First time only — pull a model inside the Ollama container
+docker compose exec ollama ollama pull llama3.2:3b
+
+make docker-down   # stop when done
 ```
 
 The API starts at `http://localhost:8000`. Interactive docs available at `http://localhost:8000/docs`.
@@ -64,12 +78,13 @@ The API starts at `http://localhost:8000`. Interactive docs available at `http:/
 
 Simple endpoint — one input string, optional system instruction.
 
-| Field          | Type   | Required | Default         | Description                      |
-|----------------|--------|----------|-----------------|----------------------------------|
-| `input`        | string | yes      | -               | The user's message               |
-| `model`        | string | no       | `DEFAULT_MODEL` | Ollama model to use              |
-| `instructions` | string | no       | -               | System-level instruction         |
-| `temperature`  | float  | no       | `0.7`           | Sampling temperature (0.0 - 1.0) |
+| Field          | Type    | Required | Default         | Description                      |
+|----------------|---------|----------|-----------------|----------------------------------|
+| `input`        | string  | yes      | -               | The user's message               |
+| `model`        | string  | no       | `DEFAULT_MODEL` | Ollama model to use              |
+| `instructions` | string  | no       | -               | System-level instruction         |
+| `temperature`  | float   | no       | `0.7`           | Sampling temperature (0.0 - 1.0) |
+| `stream`       | boolean | no       | `false`         | Stream response token by token   |
 
 Example:
 
@@ -99,12 +114,13 @@ curl -X POST http://localhost:8000/v1/responses \
 
 OpenAI-compatible endpoint — accepts a full conversation history.
 
-| Field         | Type    | Required | Default         | Description                      |
-|---------------|---------|----------|-----------------|----------------------------------|
-| `messages`    | array   | yes      | -               | Conversation history             |
-| `model`       | string  | no       | `DEFAULT_MODEL` | Ollama model to use              |
-| `n`           | integer | no       | `1`             | Number of completions to generate|
-| `temperature` | float   | no       | `0.7`           | Sampling temperature (0.0 - 1.0) |
+| Field         | Type    | Required | Default         | Description                            |
+|---------------|---------|----------|-----------------|----------------------------------------|
+| `messages`    | array   | yes      | -               | Conversation history                   |
+| `model`       | string  | no       | `DEFAULT_MODEL` | Ollama model to use                    |
+| `n`           | integer | no       | `1`             | Number of completions (ignored if stream) |
+| `temperature` | float   | no       | `0.7`           | Sampling temperature (0.0 - 1.0)       |
+| `stream`      | boolean | no       | `false`         | Stream response token by token         |
 
 Each message: `{"role": "system"|"user"|"assistant", "content": "..."}`
 
@@ -132,6 +148,25 @@ curl -X POST http://localhost:8000/v1/chat/completions \
         "content": "The capital of France is Paris."
       }
     }
+  ]
+}
+```
+
+---
+
+### GET `/v1/models`
+
+List all models currently available on the local Ollama server.
+
+```bash
+curl http://localhost:8000/v1/models
+```
+
+```json
+{
+  "models": [
+    {"id": "llama3.2:3b", "size": 2019393189},
+    {"id": "tinyllama:latest", "size": 637875785}
   ]
 }
 ```
@@ -181,7 +216,8 @@ app/
 ├── main.py                  # FastAPI app entry point
 ├── api/
 │   ├── routes_chat.py       # POST /v1/chat/completions
-│   └── routes_responses.py  # POST /v1/responses
+│   ├── routes_responses.py  # POST /v1/responses
+│   └── routes_models.py     # GET /v1/models
 ├── core/
 │   ├── security.py          # API key authentication
 │   └── config/
