@@ -39,3 +39,4 @@ class ChatCompletionRequest(BaseModel):
     messages: List[Message]
     n: int = 1
     temperature: Optional[float] = 0.7
+    stream: bool = False

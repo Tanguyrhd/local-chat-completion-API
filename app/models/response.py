@@ -26,6 +26,7 @@ class ResponseRequest(BaseModel):
     instructions: Optional[str] = None
     input: str
     temperature: Optional[float] = 0.7
+    stream: bool = False
 
 
 class ResponseOutput(BaseModel):
