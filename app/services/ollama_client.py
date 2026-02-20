@@ -8,16 +8,16 @@ All other modules go through this function to generate text.
 import requests
 from core.config.settings import settings
 
-def generate_with_ollama(model: str, prompt: str, temperature: float):
+def generate_with_ollama(model: str, messages: list[dict], temperature: float):
     """
-    Send a prompt to the Ollama API and return the generated text.
+    Send a list of messages to the Ollama /api/chat endpoint and return the reply.
 
     Makes a synchronous POST request to the local Ollama server and waits
     for the full response before returning (no streaming).
 
     Args:
         model: The name of the Ollama model to use (e.g. "llama3", "mistral").
-        prompt: The fully formatted prompt string to send to the model.
+        messages: List of message dicts with "role" and "content" keys.
         temperature: Sampling temperature between 0.0 and 1.0.
 
     Returns:
@@ -31,12 +31,12 @@ def generate_with_ollama(model: str, prompt: str, temperature: float):
         settings.OLLAMA_URL,
         json={
             "model": model,
-            "prompt": prompt,
-            "temperature": temperature,
+            "messages": messages,
+            "options": {"temperature": temperature},
             "stream": False
         }
     )
 
     response.raise_for_status()
 
-    return response.json()["response"]
+    return response.json()["message"]["content"]

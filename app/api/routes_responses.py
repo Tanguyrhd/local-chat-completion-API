@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends
 from models.response import ResponseRequest
 from services.llm_engine import LLMEngine
 from core.security import verify_api_key
+from utils.prompt_builder import build_messages_from_response
 
 router = APIRouter()
 
@@ -17,8 +18,8 @@ def create_response(request: ResponseRequest, _=Depends(verify_api_key)):
     """
     Generate a response from a single input string.
 
-    Passes the request directly to LLMEngine and returns the result as-is.
-    FastAPI automatically serializes the returned Pydantic object to JSON.
+    Builds a messages list from instructions and input via prompt_builder,
+    then delegates to LLMEngine and returns the result as-is.
 
     Args:
         request: Validated request body containing model, instructions, input, and temperature.
@@ -27,9 +28,10 @@ def create_response(request: ResponseRequest, _=Depends(verify_api_key)):
     Returns:
         Response: A Pydantic object with the model name and the assistant's reply.
     """
+    messages = build_messages_from_response(request.instructions, request.input)
+
     return LLMEngine.generate_response(
         model=request.model,
-        instructions=request.instructions,
-        input_text=request.input,
+        messages=messages,
         temperature=request.temperature
-    )
+        )

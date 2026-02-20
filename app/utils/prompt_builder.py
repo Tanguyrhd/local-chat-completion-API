@@ -2,36 +2,17 @@
 Utility functions for building prompts from structured data.
 
 Handles the conversion from API-level data structures (like message lists)
-into raw strings that the LLM can consume.
+into message dicts for the Ollama /api/chat endpoint.
 """
 
-def build_prompt_from_messages(messages):
-    """
-    Convert a list of chat messages into a single formatted prompt string.
+def build_messages_from_chat(messages) -> list[dict]:
+    """Convert a list of Message objects to dicts for the Ollama /api/chat endpoint."""
+    return [{"role": m.role, "content": m.content} for m in messages]
 
-    Each message is formatted as "[ROLE]: content" on its own line.
-    A trailing "[ASSISTANT]:" cue is appended at the end to prompt
-    the model to generate the next reply.
-
-    Args:
-        messages: Ordered list of messages representing the conversation history.
-
-    Returns:
-        str: A formatted prompt string ready to be sent to the LLM.
-
-    Example:
-        Input:
-            [Message(role="system", content="You are helpful."),
-             Message(role="user", content="What is Python?")]
-
-        Output:
-            "[SYSTEM]: You are helpful.\\n[USER]: What is Python?\\n[ASSISTANT]:"
-    """
-    prompt = ""
-
-    for msg in messages:
-        prompt += f"[{msg.role.upper()}]: {msg.content}\n"
-
-    prompt += "[ASSISTANT]:"
-
-    return prompt
+def build_messages_from_response(instructions: str | None, input_text: str) -> list[dict]:
+    """Build a messages list from an optional system instruction and user input."""
+    messages = []
+    if instructions:
+        messages.append({"role": "system", "content": instructions})
+    messages.append({"role": "user", "content": input_text})
+    return messages
