@@ -1,17 +1,16 @@
 """
 Route handler for the /v1/responses endpoint.
 
-Provides a simpler alternative to /v1/chat/completions — accepts a single
-input string and an optional system instruction instead of a message history.
+Accepts a single input string and an optional system instruction.
 """
 
 import json
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from models.response import ResponseRequest
+from schemas.responses import ResponseRequest
 from services.llm_engine import LLMEngine
 from core.security import verify_api_key
-from utils.prompt_builder import build_messages_from_response
+from services.prompt_builder import build_messages_from_response
 
 router = APIRouter()
 
@@ -24,7 +23,11 @@ def _sse_generator(chunks):
 
 
 @router.post("/v1/responses")
-def create_response(request: ResponseRequest, _=Depends(verify_api_key)):
+def create_response(
+    request: ResponseRequest,
+    _=Depends(verify_api_key),
+    engine: LLMEngine = Depends(LLMEngine),
+):
     """
     Generate a response from a single input string.
 
@@ -34,6 +37,7 @@ def create_response(request: ResponseRequest, _=Depends(verify_api_key)):
     Args:
         request: Validated request body containing model, instructions, input, temperature, and stream.
         _: API key dependency — runs verify_api_key before this handler executes.
+        engine: LLMEngine instance injected by FastAPI.
 
     Returns:
         Response | StreamingResponse: Full response object, or SSE stream if stream=True.
@@ -41,11 +45,11 @@ def create_response(request: ResponseRequest, _=Depends(verify_api_key)):
     messages = build_messages_from_response(request.instructions, request.input)
 
     if request.stream:
-        _, chunks = LLMEngine.stream_response(
+        chunks = engine.stream_response(
             model=request.model, messages=messages, temperature=request.temperature
-        )
+        )[1]
         return StreamingResponse(_sse_generator(chunks), media_type="text/event-stream")
 
-    return LLMEngine.generate_response(
+    return engine.generate_response(
         model=request.model, messages=messages, temperature=request.temperature
     )

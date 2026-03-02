@@ -7,7 +7,7 @@ All other modules go through this function to generate text.
 
 import json
 import requests
-from core.config.settings import settings
+from core.config import settings
 
 
 def generate_with_ollama(model: str, messages: list[dict], temperature: float):

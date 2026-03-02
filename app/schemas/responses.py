@@ -1,7 +1,7 @@
 """
-Pydantic models for the /v1/responses endpoint.
+Pydantic schemas for the /v1/responses endpoint.
 
-Three models work together to represent the full request/response cycle:
+Three schemas work together to represent the full request/response cycle:
   ResponseRequest  → validates the incoming request body
   ResponseOutput   → wraps the LLM's text reply
   Response         → the full object returned to the caller
@@ -25,7 +25,7 @@ class ResponseRequest(BaseModel):
     model: Optional[str] = None
     instructions: Optional[str] = None
     input: str
-    temperature: Optional[float] = 0.7
+    temperature: float = 0.7
     stream: bool = False
 
 

@@ -31,16 +31,3 @@ def test_responses_with_instructions_real_ollama():
     )
     assert response.status_code == 200
     assert response.json()["output"]["content"] != ""
-
-
-@pytest.mark.integration
-def test_chat_completions_real_ollama():
-    response = client.post(
-        "/v1/chat/completions",
-        json={"messages": [{"role": "user", "content": "Say exactly: OK"}]},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "choices" in data
-    assert len(data["choices"]) == 1
-    assert data["choices"][0]["message"]["content"] != ""
