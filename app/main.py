@@ -9,24 +9,23 @@ Run with:
 """
 
 from fastapi import FastAPI
-from api import routes_chat, routes_responses, routes_models
-from core.config.logging_config import setup_logging
+from endpoints import responses, models
+from core.logging import setup_logging
 
 # Initialize the logging system before anything else (format, level, etc.)
 setup_logging()
 
 # Main FastAPI application instance
 app = FastAPI(
-    title="Local Chat Completion API",
+    title="Local Responses API",
     description="OpenAI-compatible API running locally via Ollama",
     version="2.0.0",
 )
 
 # Register routers
 # Each router groups the routes of a functional domain
-app.include_router(routes_chat.router)      # /v1/chat/completions
-app.include_router(routes_responses.router) # /v1/responses
-app.include_router(routes_models.router)    # /v1/models
+app.include_router(responses.router) # /v1/responses
+app.include_router(models.router)    # /v1/models
 
 
 @app.get("/")
@@ -38,5 +37,5 @@ def root():
         "version": app.version,
         "status": "running",
         "docs": "/docs",
-        "endpoints": ["/v1/chat/completions", "/v1/responses", "/v1/models"],
+        "endpoints": ["/v1/responses", "/v1/models"],
     }

@@ -6,7 +6,7 @@ If no API_KEY is configured in settings, authentication is skipped entirely.
 """
 
 from fastapi import Header, HTTPException
-from core.config.settings import settings
+from core.config import settings
 
 
 def verify_api_key(x_api_key: str = Header(default=None)):
