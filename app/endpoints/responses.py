@@ -15,8 +15,9 @@ from services.prompt_builder import build_messages_from_response
 router = APIRouter()
 
 
-def _sse_generator(chunks):
+def _sse_generator(model, chunks, temperature, stream):
     """Wrap text chunks in Server-Sent Events format."""
+    yield f"data: {json.dumps({'model': model, 'temperature': temperature, 'stream': stream})}\n\n"
     for chunk in chunks:
         yield f"data: {json.dumps({'content': chunk})}\n\n"
     yield "data: [DONE]\n\n"
@@ -45,10 +46,10 @@ def create_response(
     messages = build_messages_from_response(request.instructions, request.input)
 
     if request.stream:
-        chunks = engine.stream_response(
+        model, chunks = engine.stream_response(
             model=request.model, messages=messages, temperature=request.temperature
-        )[1]
-        return StreamingResponse(_sse_generator(chunks), media_type="text/event-stream")
+        )
+        return StreamingResponse(_sse_generator(model, chunks, request.temperature, request.stream), media_type="text/event-stream")
 
     return engine.generate_response(
         model=request.model, messages=messages, temperature=request.temperature
