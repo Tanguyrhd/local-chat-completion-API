@@ -1,14 +1,12 @@
 # Local Chat Completion API
 
-An OpenAI-compatible REST API that runs locally using [Ollama](https://ollama.com). Drop-in replacement for OpenAI's `/v1/chat/completions` endpoint, with an additional simpler `/v1/responses` endpoint.
+A local REST API built on top of [Ollama](https://ollama.com) that abstracts the LLM backend behind a clean, extensible interface. Designed to support future features like tool use, web search, and thinking mode — without being tied to any specific LLM provider.
 
 ## Features
 
-- **OpenAI-compatible** — `POST /v1/chat/completions` with full message history support
 - **Simple responses** — `POST /v1/responses` with optional system instructions
 - **Streaming** — token-by-token responses via Server-Sent Events (`"stream": true`)
 - **Model listing** — `GET /v1/models` lists all locally available Ollama models
-- **Multiple completions** — generate `n` independent responses in one request
 - **Temperature control** — tune creativity vs determinism
 - **Optional API key auth** — secure with `x-api-key` header
 - **100% local** — no data leaves your machine
@@ -45,7 +43,7 @@ Edit `.env` to match your setup:
 | Variable        | Default                           | Description                           |
 |-----------------|-----------------------------------|---------------------------------------|
 | `OLLAMA_URL`    | `http://localhost:11434/api/chat` | Ollama API endpoint                   |
-| `DEFAULT_MODEL` | `llama3`                          | Model used when none is specified     |
+| `DEFAULT_MODEL` | `tinyllama`                       | Model used when none is specified     |
 | `API_KEY`       | _(none)_                          | If set, all requests require this key |
 
 Authentication is disabled when `API_KEY` is not set.
@@ -53,11 +51,13 @@ Authentication is disabled when `API_KEY` is not set.
 ## Running
 
 **Locally:**
+
 ```bash
 make run
 ```
 
 **With Docker (API + Ollama):**
+
 ```bash
 make docker-build
 make docker-up
@@ -108,48 +108,24 @@ curl -X POST http://localhost:8000/v1/responses \
 }
 ```
 
----
-
-### POST `/v1/chat/completions`
-
-OpenAI-compatible endpoint — accepts a full conversation history.
-
-| Field         | Type    | Required | Default         | Description                            |
-|---------------|---------|----------|-----------------|----------------------------------------|
-| `messages`    | array   | yes      | -               | Conversation history                   |
-| `model`       | string  | no       | `DEFAULT_MODEL` | Ollama model to use                    |
-| `n`           | integer | no       | `1`             | Number of completions (ignored if stream) |
-| `temperature` | float   | no       | `0.7`           | Sampling temperature (0.0 - 1.0)       |
-| `stream`      | boolean | no       | `false`         | Stream response token by token         |
-
-Each message: `{"role": "system"|"user"|"assistant", "content": "..."}`
-
-Example:
+**Streaming example:**
 
 ```bash
-curl -X POST http://localhost:8000/v1/chat/completions \
+curl -N -X POST http://localhost:8000/v1/responses \
   -H "Content-Type: application/json" \
-  -d '{
-    "model": "llama3.2",
-    "messages": [
-      {"role": "system", "content": "You are a helpful assistant."},
-      {"role": "user", "content": "What is the capital of France?"}
-    ]
-  }'
+  -d '{"input": "Tell me a story", "stream": true}'
 ```
 
-```json
-{
-  "model": "llama3.2",
-  "choices": [
-    {
-      "message": {
-        "role": "assistant",
-        "content": "The capital of France is Paris."
-      }
-    }
-  ]
-}
+```text
+data: {"model": "tinyllama", "temperature": 0.7, "stream": true}
+
+data: {"content": "Once"}
+
+data: {"content": " upon"}
+
+data: {"content": " a time"}
+
+data: [DONE]
 ```
 
 ---
@@ -199,13 +175,12 @@ make test-all
 pytest --cov=app -m "not integration"
 ```
 
-| File                           | What it tests                         |
-|--------------------------------|---------------------------------------|
-| `test_prompt_builder.py`       | Pure unit tests — message formatting  |
-| `test_routes_chat.py`          | `/v1/chat/completions` with mock      |
-| `test_routes_responses.py`     | `/v1/responses` with mock             |
-| `test_auth.py`                 | API key authentication                |
-| `integration/`                 | Real Ollama calls (opt-in)            |
+| File                           | What it tests                        |
+|--------------------------------|--------------------------------------|
+| `test_prompt_builder.py`       | Pure unit tests — message formatting |
+| `test_responses.py`            | `/v1/responses` with mock            |
+| `test_security.py`             | API key authentication               |
+| `integration/`                 | Real Ollama calls (opt-in)           |
 
 ---
 
@@ -214,28 +189,27 @@ pytest --cov=app -m "not integration"
 ```text
 app/
 ├── main.py                  # FastAPI app entry point
-├── api/
-│   ├── routes_chat.py       # POST /v1/chat/completions
-│   ├── routes_responses.py  # POST /v1/responses
-│   └── routes_models.py     # GET /v1/models
+├── endpoints/
+│   ├── responses.py         # POST /v1/responses
+│   └── models.py            # GET /v1/models
 ├── core/
 │   ├── security.py          # API key authentication
-│   └── config/
-│       └── settings.py      # Environment-based configuration
-├── models/
-│   ├── chat.py              # Request models for /chat/completions
-│   └── response.py          # Request/response models for /responses
-├── services/
-│   ├── llm_engine.py        # Orchestration layer
-│   └── ollama_client.py     # HTTP client for Ollama
-└── utils/
+│   ├── config.py            # Environment-based configuration
+│   └── logging.py           # Logging setup
+├── schemas/
+│   └── responses.py         # Pydantic request/response models
+└── services/
+    ├── llm_engine.py        # Orchestration layer
+    ├── ollama_client.py     # HTTP client for Ollama
     └── prompt_builder.py    # Message list construction
 tests/
 ├── conftest.py              # Shared fixtures
-├── test_prompt_builder.py
-├── test_routes_chat.py
-├── test_routes_responses.py
-├── test_auth.py
+├── endpoints/
+│   └── test_responses.py
+├── core/
+│   └── test_security.py
+├── services/
+│   └── test_prompt_builder.py
 └── integration/
     └── test_integration.py
 ```
