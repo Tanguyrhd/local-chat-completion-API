@@ -19,11 +19,12 @@ class Settings(BaseSettings):
     """
 
     APP_NAME: str = "Mini OpenAI Clone"
+
     DEBUG: bool = True
 
     OLLAMA_URL: str = Field(default="http://localhost:11434/api/chat")
 
-    DEFAULT_MODEL: str = "llama3"
+    DEFAULT_MODEL: str = "tinyllama"
 
     API_KEY: str | None = None
 
