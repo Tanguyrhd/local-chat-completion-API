@@ -2,7 +2,7 @@
 HTTP client for the local Ollama inference server.
 
 This module is the only place in the app that communicates directly with Ollama.
-All other modules go through this function to generate text.
+All other modules go through these functions to generate text.
 """
 
 import json
@@ -10,38 +10,44 @@ import requests
 from core.config import settings
 
 
-def generate_with_ollama(model: str, messages: list[dict], temperature: float):
+def chat_with_ollama(
+    model: str,
+    messages: list[dict],
+    temperature: float,
+    tools: list[dict] | None = None,
+) -> dict:
     """
-    Send a list of messages to the Ollama /api/chat endpoint and return the reply.
+    Send messages to Ollama and return the full assistant message dict.
 
-    Makes a synchronous POST request to the local Ollama server and waits
-    for the full response before returning (no streaming).
+    Unlike a simple text-only call, this returns the complete message object
+    so that the caller can inspect tool_calls if the model wants to use a tool.
 
     Args:
         model: The name of the Ollama model to use (e.g. "llama3", "mistral").
         messages: List of message dicts with "role" and "content" keys.
         temperature: Sampling temperature between 0.0 and 1.0.
+        tools: Optional list of OpenAI-compatible tool schemas to expose.
 
     Returns:
-        str: The raw generated text from the model.
+        dict: The full assistant message from Ollama
+              (may contain "content" and/or "tool_calls").
 
     Raises:
         requests.HTTPError: If Ollama returns a 4xx or 5xx response.
         requests.ConnectionError: If the Ollama server is not running.
     """
-    response = requests.post(
-        settings.OLLAMA_URL,
-        json={
-            "model": model,
-            "messages": messages,
-            "options": {"temperature": temperature},
-            "stream": False,
-        },
-    )
+    payload: dict = {
+        "model": model,
+        "messages": messages,
+        "options": {"temperature": temperature},
+        "stream": False,
+    }
+    if tools:
+        payload["tools"] = tools
 
+    response = requests.post(settings.OLLAMA_URL, json=payload)
     response.raise_for_status()
-
-    return response.json()["message"]["content"]
+    return response.json()["message"]
 
 
 def stream_from_ollama(model: str, messages: list[dict], temperature: float):
