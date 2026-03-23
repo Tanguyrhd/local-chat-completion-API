@@ -11,6 +11,7 @@ Run with:
 from fastapi import FastAPI
 from endpoints import responses, models
 from core.logging import setup_logging
+from services import tool_registry
 
 # Initialize the logging system before anything else (format, level, etc.)
 setup_logging()
@@ -39,3 +40,22 @@ def root():
         "docs": "/docs",
         "endpoints": ["/v1/responses", "/v1/models"],
     }
+
+# Tool calling
+tool_registry.register(
+    schema={
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Returns the current weather for a given city.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "city": {"type": "string", "description": "The city name."}
+                },
+                "required": ["city"],
+            },
+        },
+    },
+    handler=lambda city: f"Weather in {city}: 22°C, sunny.",
+)

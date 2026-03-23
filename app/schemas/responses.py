@@ -27,6 +27,7 @@ class ResponseRequest(BaseModel):
     input: str
     temperature: float = 0.7
     stream: bool = False
+    tools: bool = False
 
 
 class ResponseOutput(BaseModel):

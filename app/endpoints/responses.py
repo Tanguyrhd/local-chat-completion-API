@@ -45,12 +45,15 @@ def create_response(
     """
     messages = build_messages_from_response(request.instructions, request.input)
 
-    if request.stream:
+    if request.stream and not request.tools:
         model, chunks = engine.stream_response(
             model=request.model, messages=messages, temperature=request.temperature
         )
         return StreamingResponse(_sse_generator(model, chunks, request.temperature, request.stream), media_type="text/event-stream")
 
     return engine.generate_response(
-        model=request.model, messages=messages, temperature=request.temperature
+        model=request.model,
+        messages=messages,
+        temperature=request.temperature,
+        use_tools=request.tools,
     )
